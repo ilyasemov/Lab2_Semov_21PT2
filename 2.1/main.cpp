@@ -29,7 +29,7 @@ int main()
 {
     check(L"vsemprivet",L"ilya");
     check(L"ilya",L"");
-    check(L"ilya",L"VSEMPRIVET123");
+    check(L"ilya",L"vsemprivet123");
     check(L"i l y a",L"VSEMPRIVET");
     check(L"123",L"VSEMPRIVET");
 }
