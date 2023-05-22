@@ -2,24 +2,31 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <codecvt>
 #include <locale>
+#include <codecvt>
 #include <iostream>
-class Cipher
+#include <cctype>
+using namespace std;
+
+class modAlphaCipher
 {
 private:
-    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> codec;
-    int pillar, rad, len_text;
+    std::string numAlpha = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"; //алфавит по порядку
+    std::string numalpha = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
+    wstring_convert<codecvt_utf8<wchar_t>, wchar_t> codec; //кодек UTF-8
+    wstring ws = codec.from_bytes(numAlpha);
+    std::wstring wa = codec.from_bytes(numalpha);
+    std::map <char,int> alphaNum; //ассоциативный массив "номер по символу"
+    std::vector <int> key; //ключ
+    std::vector<int> convert(const std::string& s); //преобразование строка-вектор
+    std::string convert(const std::vector<int>& v); //преобразование вектор-строка
+    std::string getValidText(const std::string & s);
+    std::string getValidKey(const std::string & s);
 public:
-    Cipher()=delete;
-    Cipher(std::wstring & ws_key);
-    std::wstring encrypt( std::wstring& ws_open_text);
-    std::wstring decrypt(const std::wstring& ws_cipher_text);
-    void set_tableform(const std::wstring& ws_text);
-    void set_key(std::wstring & ws_key);
-    int getValidKey(std::wstring& ws_key);
-    std::wstring getValidOpenText(const std::wstring & ws_open_text);
-    std::wstring getValidCipherText(const std::wstring & ws_cipher_text);
+    modAlphaCipher()=delete; //запретим конструктор без параметров
+    modAlphaCipher(const std::string& skey); //конструктор для установки ключа
+    std::string encrypt(const std::string& open_text); //зашифрование
+    std::string decrypt(const std::string& cipher_text);//расшифрование
 };
 
 class cipher_error: public std::invalid_argument
