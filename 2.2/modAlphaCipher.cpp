@@ -1,109 +1,82 @@
-#include  "modAlphaCipher.h"
+#include "modAlphaCipher.h"
+modAlphaCipher::modAlphaCipher(const std::string& skey)
+{
+    for (unsigned i=0; i<ws.size(); i++) { 
+        alphaNum[ws[i]]=i;
+    }
+    key = convert(getValidKey(skey)); //Cоздание ключа
+}
 
-Cipher::Cipher(std::wstring & ws_key)
+std::string modAlphaCipher::encrypt(const std::string& open_text) //зашифровка
 {
-    pillar = getValidKey(ws_key);
+    std::vector<int> work = convert(getValidText(open_text));
+    for(unsigned i=0; i < work.size(); i++) {
+        work[i] = (work[i] + key[i % key.size()]) % alphaNum.size(); //методом гросфельда
+    }
+    return convert(work);
 }
-void Cipher::set_key(std::wstring & ws_key)
-{
-    pillar = getValidKey(ws_key);
-}
-void Cipher::set_tableform(const std::wstring& open_text)
-{
-    len_text = open_text.size();
-    if (len_text>pillar) {
-        rad = len_text/pillar;
-        if (len_text%pillar >0) rad+=1;
-    } else {
-        rad = 1;
-    }
-}
-std::wstring Cipher::encrypt( std::wstring& open_text)
-{
-    open_text = getValidOpenText(open_text);
-    set_tableform(open_text);
-    std::wstring table_chiper[rad][pillar];
-    int nums_text = 0;
-    for (int y=0; y<rad; y++) {
-        for (int x=0; x<pillar; x++) {
-            if (nums_text < len_text) {
-                table_chiper[y][x] = open_text[nums_text];
-            } else {
-                table_chiper[y][x] = L"-";
-            }
-            nums_text++;
-        }
-    }
-    std::wstring encrypt_text;
-    for (int x=pillar-1; x>=0; x--) {
-        for (int y=0; y<rad; y++) {
-            encrypt_text+=table_chiper[y][x];
-        }
-    }
-    return encrypt_text;
-}
-std::wstring Cipher::decrypt(const std::wstring& cipher_text)
-{
-    set_tableform(getValidCipherText(cipher_text));
-    std::wstring table_chiper[rad][pillar];
-    int nums_text = 0;
-    for (int x=pillar-1; x>=0; x--) {
-        for (int y=0; y<rad; y++) {
-            table_chiper[y][x] = cipher_text[nums_text];
-            nums_text++;
-        }
-    }
-    std::wstring decrypt_text;
-    for (int y=0; y<rad; y++) {
-        for (int x=0; x<pillar; x++) {
-            if (table_chiper[y][x] != L"-")
-                decrypt_text+=table_chiper[y][x];
-        }
-    }
-    return decrypt_text;
-}
-inline int Cipher::getValidKey(std::wstring & ws_key)
-{
-    if (ws_key.empty())
-        throw cipher_error("Empty key");
-    std::string s_key = codec.to_bytes(ws_key);
-    for (auto & c:ws_key) {
-        if (!iswdigit(c)) {
-            throw cipher_error(std::string("Invalid key") + s_key);
-        }
-    }
-    int key = std::stoi(ws_key);
-    if (key<=0) {
-        throw cipher_error(std::string("Invalid key. Enter a number > 0"));
-    }
-    return key;
-}
-inline std::wstring Cipher::getValidOpenText(const std::wstring & ws_open_text)
-{
-    std::wstring tmp;
-    for (auto c:ws_open_text) {
-        if (iswalpha(c)) {
-            if (iswlower(c))
-                tmp.push_back(towupper(c));
-            else
-                tmp.push_back(c);
-        }
-    }
-    if (tmp.empty())
-        throw cipher_error("Input text is missing");
-    return tmp;
-}
-inline std::wstring Cipher::getValidCipherText(const std::wstring & ws_cipher_text)
-{
-    if (ws_cipher_text.empty())
-        throw cipher_error("Output text is missing");
 
-    for (auto c:ws_cipher_text) {
-        if (!iswupper(c)) {
-            if (c!=L'-') {
-                throw cipher_error(std::string("Invalid text"));
-            }
-        }
+std::string modAlphaCipher::decrypt(const std::string& cipher_text)
+{
+    std::vector<int> work = convert(getValidText(cipher_text));
+    for(unsigned i=0; i < work.size(); i++) {
+        work[i] = (work[i] + alphaNum.size() - key[i % key.size()]) % alphaNum.size(); 
     }
-    return ws_cipher_text;
+    return convert(work);
+}
+
+inline std::vector<int> modAlphaCipher::convert(const std::string& s)  // перегрузка
+{
+    std::vector<int> result; 
+    wstring w_s = codec.from_bytes(s); // перекодируем
+    for (unsigned i=0; i<w_s.size(); i++) {
+        result.push_back(alphaNum[w_s[i]]); //мап в вектор(значения)
+    }
+    return result;
+}
+
+inline std::string modAlphaCipher::convert(const std::vector<int>& v) // перегрузка
+{
+    std::string result;
+    wstring result_s = codec.from_bytes("");
+    for (unsigned i=0; i<v.size(); i++) {
+        result_s.push_back(ws[v[i]]);
+    }
+    result = codec.to_bytes(result_s);
+    return result;
+}
+
+inline std::string modAlphaCipher::getValidKey(const std::string & s) 
+{
+    if (s.empty())
+        throw cipher_error("Empty key");  
+    std::locale loc("ru_RU.UTF-8");
+    std::wstring tmp = codec.from_bytes(s); //строку в байты
+    for(int i = 0; i < tmp.size(); i++) {
+        if (wa.find(tmp[i]) != string::npos) {
+            tmp[i] = toupper(tmp[i], loc);  //перевод в верхний регистр
+        }
+        if (ws.find(tmp[i]) == string::npos)
+            throw cipher_error(std::string("Invalid key ")+s); //ошибка при неправильном символе
+    }
+    string tmp1 = codec.to_bytes(tmp); //обратно в байты
+    return tmp1;
+}
+
+inline std::string modAlphaCipher::getValidText(const std::string & s) //зашифровка текста
+{
+    std::locale loc("ru_RU.UTF-8");
+    std::wstring tmp = codec.from_bytes(s);
+    std::wstring n_tmp; 
+    for(int i = 0; i < tmp.size(); i++) {
+        if (wa.find(tmp[i]) != string::npos) {
+            n_tmp.push_back(toupper(tmp[i], loc)); // перевод в верхний регистр и в стринг
+        }
+        if (ws.find(tmp[i]) != string::npos)
+            n_tmp.push_back(tmp[i]);
+    }
+    string tmp1 = codec.to_bytes(n_tmp);
+    if (tmp1.empty())
+        throw cipher_error("Empty text");
+    return tmp1;
 }
