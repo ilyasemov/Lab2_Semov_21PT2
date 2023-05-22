@@ -2,86 +2,29 @@
 #include <iostream>
 #include <locale>
 #include <codecvt>
-using namespace std;
-void check( wstring text, wstring key, bool destructCipherText=false)
+
+void check(const string& Text, const string& key)
 {
     try {
-        wstring cipherText;
-        wstring decryptedText;
-        Cipher cipher(key);
-        cipherText = cipher.encrypt(text);
-        if (destructCipherText)
-            cipherText.front() = towlower(cipherText.front());
+        string cipherText;
+        string decryptedText;
+        modAlphaCipher cipher(key); //Оъект класса
+        cipherText = cipher.encrypt(Text);
         decryptedText = cipher.decrypt(cipherText);
-        wcout<<L"key="<<key<<endl;
-        wcout<<text<<endl;
-        wcout<<cipherText<<endl;
-        wcout<<decryptedText<<endl;
+        cout<<"key="<<key<<endl;
+        cout<<"Encrypted text: "<<cipherText<<endl;
+        cout<<"Decrypted text: "<<decryptedText<<endl;
     } catch (const cipher_error & e) {
-        wcerr<<"Error: "<<e.what()<<endl;
+        cerr<<"Error: "<<e.what()<<endl;
     }
+    cout<<""<<endl;
 }
-void interface_program()
-{
-    wstring key;
-    wstring text;
-    unsigned op;
-    wcout<<L"Введите ключ(Кол-во столбцов): ";
-    wcin>>key;
-    Cipher cipher(key);
-    do {
-        wcout<<L"Выберите операцию (0-exit, 1-encrypt, 2-decrypt, 3-setkey): ";
-        wcin>>op;
-        if (op > 3) {
-            wcout<<L"Попробуй другую операцию\n";
-        } else if (op > 0 && op < 3) {
-            wcout<<L"Введите текст: ";
-            wcin>>text;
-            if (op==1) {
-                wcout<<L"Зашифрованный текст: "<<cipher.encrypt(text)<<endl;
-            } else {
-                wcout<<L"Расшифрованный текст: "<<cipher.decrypt(text)<<endl;
-            }
-        } else if (op == 3) {
-            wcout<<L"Введите ключ заново: ";
-            wcin>>key;
-            cipher.set_key(key);
-        }
-    } while (op!=0);
-}
+
 int main(int argc, char **argv)
 {
-    locale loc("ru_RU.UTF-8");
-    locale::global(loc);
-    wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> codec;
-    unsigned mode_program;
-    do {
-        wcout<<L"Интерфейс - введите (1) или тест программы - введите (2). Выход (0). Ввод:";
-        wcin>>mode_program;
-        if (mode_program == 1) {
-            interface_program();
-        } else if (mode_program == 2) {
-            wstring meow = L"------------------------------";
-            check(L"Всемпривет",L"0");
-            wcout<<meow<<endl;
-            check(L"Всемпривет",L"");
-            wcout<<meow<<endl;
-            check(L"Всемпривет",L">!-*k");
-            wcout<<meow<<endl;
-            check(L"Всемпривет",L"3",true);
-            wcout<<meow<<endl;
-            check(L"Всемпривет",L"3");
-            wcout<<meow<<endl;
-            check(L"Всем5ривет",L"3");
-            wcout<<meow<<endl;
-            check(L"Всемпривет",L"3");
-            wcout<<meow<<endl;
-            check(L"",L"3");
-            wcout<<meow<<endl;
-            check(L"Всемпривет",L"3");
-            wcout<<meow<<endl;
-            return 0;
-        }
-    } while (mode_program!=0);
-    return 0;
+    check("ПОКА","Привет");
+    check("ПОКА","");
+    check("ПОКА","ПРИВЕТ123");
+    check("П о к а","ПРИВЕТ");
+    check("123","ПРИВЕТ");
 }
