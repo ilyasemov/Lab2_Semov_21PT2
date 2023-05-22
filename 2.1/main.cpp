@@ -5,31 +5,33 @@
 #include <codecvt>
 #include <typeinfo>
 using namespace std;
-void check(const wstring& Text, const wstring& key, const bool destructCipherText=false)
+void check(const string& Text, const string& key)
 {
     try {
-        wstring cipherText;
-        wstring decryptedText;
-        modAlphaCipher cipher(key);
-        cipherText = cipher.encrypt(Text);
-        if (destructCipherText)
-            cipherText.front() = towlower(cipherText.front());
-        decryptedText = cipher.decrypt(cipherText);
-        wcout<<L"key="<<key<<endl;
-        wcout<<Text<<endl;
-        wcout<<cipherText<<endl;
-        wcout<<decryptedText<<endl;
+        string cipherText;
+        string decryptedText;
+        if (key.empty())
+            throw cipher_error("Empty key");
+        if (stoi(key) > 0) {
+            modAlphaCipher cipher(stoi(key));
+            cipherText = cipher.encrypt(Text);
+            decryptedText = cipher.decrypt(cipherText);
+            cout<<"key="<<key<<endl;
+            cout<<"Encrypted text: "<<cipherText<<endl;
+            cout<<"Decrypted text: "<<decryptedText<<endl;
+        } else
+            throw cipher_error(std::string("Invalid key ")+key);
     } catch (const cipher_error & e) {
-        wcerr<<"Error: "<<e.what()<<endl;
+        cerr<<"Error: "<<e.what()<<endl;
     }
-    
-}
+    cout<<""<<endl;
+    }
 
-int main()
+int main(int argc, char **argv)
 {
-    check(L"vsemprivet",L"ilya");
-    check(L"ilya",L"");
-    check(L"ilya",L"vsemprivet123");
-    check(L"i l y a",L"VSEMPRIVET");
-    check(L"123",L"VSEMPRIVET");
+    check("vsemprivet","0");
+    check("ilya","");
+    check("ilya","4");
+    check("i l y a","4");
+    check("123","4");
 }
